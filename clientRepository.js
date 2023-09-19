@@ -2,12 +2,26 @@ const { writeFile, readFile,open,close, unlink } = require('fs');
 const fs = require('fs/promises');
 const type = '.json';
 
-const createFile = async (fileName)=>{
+const createFile = async (fileName, argument)=>{
     open(`data/${fileName}${type}`, 'wx', (err, fd) => {
         if (err) {
           console.log(err.message);
         }
-      
+
+        let defaultFile = {
+          title: "",
+          users: []
+        }
+        if(argument.length > 0){
+          defaultFile.title = argument
+        }
+        writeFile(`data/${fileName}${type}`, JSON.stringify(defaultFile, null, 2), (err) => {
+          if (err) {
+            console.log('Failed to write updated data to file');
+            return;
+          }
+          console.log('Updated file successfully');
+        });
         close(fd, err => {
           if (err) {
             console.log(err.message);
@@ -42,7 +56,7 @@ const addInList = async (fileName, users)=>{
             parsedData  = JSON.parse(data);
         }
 
-        parsedData.push(...users.map(u => {return {id: u.id.user,serialized: u.id._serialized}}))
+        parsedData.users.push(...users.map(u => {return {id: u.id.user,serialized: u.id._serialized}}))
 
         writeFile(`data/${fileName}${type}`, JSON.stringify(parsedData, null, 2), (err) => {
           if (err) {
@@ -56,7 +70,7 @@ const addInList = async (fileName, users)=>{
 
 const getList = async (fileName)=>{
      const listUsers = await fs.readFile(`data/${fileName}${type}`);
-        let parsedData = [];
+        let parsedData = {};
         
         if(listUsers.length > 0){
             parsedData  = JSON.parse(listUsers);

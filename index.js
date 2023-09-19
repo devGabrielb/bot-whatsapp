@@ -55,7 +55,10 @@ client.initialize();
 const createList = async (msg)=>{
     try {
         const sender = msg.from.includes("7488043170") ? msg.to : msg.from
-    createFile(msg.body.split(" ")[1])
+        let argument = "";
+        if(msg.body.includes("-a")) argument = msg.body.substring(msg.body.indexOf("-a")+2).trim();
+
+    createFile(msg.body.split(" ")[1], argument)
     client.sendMessage(sender,"Lista Criada com Sucesso!")
     } catch (error) {
         msg.reply("❌ Erro ao criar lista")
@@ -77,12 +80,16 @@ const deleteList = async (msg)=>{
 const userMentions = async (filename,msg)=>{
     
    try {
-    const users = await getList(filename)
+    const list = await getList(filename)
     const chat = await msg.getChat();
 
-    const avaliableUsers = users.filter(x => chat.participants.some(d => d.id.user == x.id));
+    const avaliableUsers = list.users.filter(x => chat.participants.some(d => d.id.user == x.id));
         
+
         let text = "";
+        if(list.title.length > 0){
+            text += list.title;
+        }
         let mentions = [];
 
         for(let user of avaliableUsers) {
@@ -92,7 +99,7 @@ const userMentions = async (filename,msg)=>{
             text += `@${contact.id.user} `;
         }
 
-        await chat.sendMessage("Chamando todos os autobots 🤖 \n"+text, { mentions });
+        await chat.sendMessage(text+"\n", { mentions });
    } catch (error) {
         msg.reply("❌ Não foi possivel recuperar a lista")
    }
