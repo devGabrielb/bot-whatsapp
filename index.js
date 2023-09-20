@@ -2,7 +2,7 @@ const { Client, LocalAuth, MessageMedia  } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const axios = require('axios')
 
-const {createFile, addInList, getList, deleteFile} = require('./clientRepository');
+const {createFile, addInList, getList, deleteFile, addRule, getRulesList, editRule} = require('./clientRepository');
 
 const client = new Client({
     authStrategy: new LocalAuth()
@@ -23,15 +23,17 @@ client.on('message_create', async  msg => {
     // Cola seu número onde tem o 84848484, sem o 9
     const sender = msg.from.includes("7488043170") ? msg.to : msg.from
 
-    if (command === "!sticker")  generateSticker(msg, sender)
     if (command === "@brunawn")  msg.react("😉")
-    if (command === "quem é vc")  msg.react("😉")
+    if(['@everyone','@todes','@here','@channel'].includes(command) ) everyOne(msg)
+    
+    if (command === "!sticker")  generateSticker(msg, sender)
     if (command === "!balinha") {
         const chat = await msg.getChat();
         let gleisin = await client.getContactById("558774006609@c.us")
         await chat.sendMessage("Aí é com o famoso @"+gleisin.id.user+" 😉",{mentions: [gleisin]})
     }
-    if(['@everyone','@todes','@here','@channel'].includes(command) ) everyOne(msg)
+/////// Manipuladores de listas de menções//////// 
+
     if(command === "!create") createList(msg);
     if(command === "!add") {
         let fileName = msg.body.split(" ")[1]
@@ -46,11 +48,67 @@ client.on('message_create', async  msg => {
         userMentions(fileName,msg)
     };
 
+////////////////////////////////////////////////
+/////////adicionar comandos para o grupo
+if(command === "!rules") {
+    getRules(msg);
+}
+if(command === "!rules:add") {
+    addRuleInList(msg);
+}
+if(command === "!rules:edit") {
+    editRuleInList(msg);
+}
+
 
 
 });
 
 client.initialize();
+
+const getRules = async (msg)=>{
+    try {
+        const sender = msg.from.includes("7488043170") ? msg.to : msg.from
+        let rules = await getRulesList(sender.split("@")[0])
+        if(rules.length <= 0){
+            client.sendMessage(sender,"Lista de regras Vazia!")
+            return;
+        }
+        let newRules = rules.map((x, i) => (i+1)+ " - " + x + "\n").toString()
+        const regex = /\n,/gi;
+        client.sendMessage(sender,"Regras do Grupo: \n"+newRules.replace(regex,"\n"))
+    } catch (error) {
+        msg.reply("❌ Erro ao recuperar regras do grupo")
+    }
+
+}
+
+const addRuleInList = async (msg)=>{
+    try {
+        
+        const sender = msg.from.includes("7488043170") ? msg.to : msg.from;
+        let rule = msg.body.substring(msg.body.indexOf(" ")).trim()
+        addRule(sender.split("@")[0],rule)
+
+        client.sendMessage(sender,`Regra atualizada com sucesso!`)
+    } catch (error) {
+        msg.reply("❌ Erro ao atualizada Regra na lista")
+    }
+}
+
+const editRuleInList = async (msg)=>{
+    try {
+        
+        const sender = msg.from.includes("7488043170") ? msg.to : msg.from;
+        let rule = msg.body.substring(msg.body.indexOf(" ")).trim()
+        editRule(sender.split("@")[0],rule)
+
+        client.sendMessage(sender,`Regra adicionada com sucesso!`)
+    } catch (error) {
+        msg.reply("❌ Erro ao adicionar Regra na lista")
+    }
+}
+
 
 const createList = async (msg)=>{
     try {
