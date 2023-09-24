@@ -1,12 +1,10 @@
-const { Client, LocalAuth, MessageMedia  } = require('whatsapp-web.js');
+const { MessageMedia  } = require('whatsapp-web.js');
+const client = require('./config/Client.js');
 const qrcode = require('qrcode-terminal');
 const axios = require('axios')
 
 const {createFile, addInList, getList, deleteFile, addRule, getRulesList, editRule} = require('./clientRepository');
 
-const client = new Client({
-    authStrategy: new LocalAuth()
-});
 
 client.on('qr', (qr) => {
     qrcode.generate(qr, {small: true});

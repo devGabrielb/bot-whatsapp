@@ -1,0 +1,13 @@
+version: "3.5"
+services:
+  api: # API - Instância 01
+    build:
+      context: .
+      dockerfile: /docker/Dockerfile
+    hostname: brunawn-whatsapp
+    # command: bash -c "npm run knex"
+    expose:
+      - "3333"
+    environment:
+      - API_PORT=3333
+
