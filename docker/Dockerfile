@@ -23,7 +23,7 @@ COPY . .
 
 RUN npm install
 
-EXPOSE 8988
+EXPOSE 3333
 
 CMD [ "node", "index.js" ]
 # CMD [ "./start.sh" ]
