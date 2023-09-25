@@ -1,9 +1,19 @@
 // config.js
-const { Client, LocalAuth } = require('whatsapp-web.js'); // Substitua 'sua-lib-client' pelo nome real da sua biblioteca
+const { Client, RemoteAuth } = require('whatsapp-web.js'); // Substitua 'sua-lib-client' pelo nome real da sua biblioteca
+// Require database
+const { MongoStore } = require('wwebjs-mongo');
+const mongoose = require('mongoose');
 
-const client = new Client({
-    authStrategy: new LocalAuth(),
-    puppeteer: { headless: true, args: ['--no-sandbox','--disable-setuid-sandbox'] }
-});
+const client = async ()=>{
+    mongo = await mongoose.connect(process.env.MONGO_URI)
+        const store = new MongoStore({ mongoose: mongoose });
+    
+        return new Client({
+        authStrategy: new RemoteAuth({
+            store: store,
+            backupSyncIntervalMs: 300000
+            })
+        });
+}
 
 module.exports = client;

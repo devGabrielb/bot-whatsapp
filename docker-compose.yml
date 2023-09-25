@@ -1,5 +1,21 @@
 version: "3.5"
 services:
+  mongo-express:
+    image: mongo-express
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: devGabrielb1
+      ME_CONFIG_BASICAUTH_PASSWORD: devg123!
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    links:
+      - mongodb
+    networks:
+      - mongo-compose-network
+  
   mongodb:
     image: mongo
     container_name: meu-mongodb
@@ -7,18 +23,24 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+    networks:
+      - mongo-compose-network
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-  api: # API - Instância 01
-    build:
-      context: .
-      dockerfile: ./docker/Dockerfile
-    # command: bash -c "npm run knex"
-    expose:
-      - "3333"
-    environment:
-      - API_PORT=3333
+  # api: # API - Instância 01
+  #   build:
+  #     context: .
+  #     dockerfile: ./docker/Dockerfile
+  #   # command: bash -c "npm run knex"
+  #   expose:
+  #     - "3333"
+  #   environment:
+  #     - API_PORT=3333
 
 volumes:
   mongodb_data:
+
+networks: 
+  mongo-compose-network:
+    driver: bridge

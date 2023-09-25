@@ -1,10 +1,12 @@
 const { MessageMedia  } = require('whatsapp-web.js');
-const client = require('./config/Client.js');
+const clientResult = require('./config/client');
 const qrcode = require('qrcode-terminal');
 const axios = require('axios')
-
 const {createFile, addInList, getList, deleteFile, addRule, getRulesList, editRule} = require('./clientRepository');
+require('dotenv').config();
 
+async function run(){
+    const client = await clientResult();
 
 client.on('qr', (qr) => {
     qrcode.generate(qr, {small: true});
@@ -63,6 +65,11 @@ if(command === "!rules:edit") {
 });
 
 client.initialize();
+}
+
+run().then(()=>{
+    console.log("rodando bem");
+})
 
 const getRules = async (msg)=>{
     try {
