@@ -5,13 +5,15 @@ const axios = require('axios')
 const {createFile, addInList, getList, deleteFile, addRule, getRulesList, editRule} = require('./clientRepository');
 require('dotenv').config();
 
+
+
 async function run(){
     const client = await clientResult();
-
-client.on('qr', (qr) => {
-    qrcode.generate(qr, {small: true});
-});
-
+    
+    client.on('qr', (qr) => {
+        qrcode.generate(qr, {small: true});
+    });
+    
 client.on('ready', () => {
     console.log('Client is ready!');
 });
@@ -22,45 +24,121 @@ client.on('message_create', async  msg => {
     console.log(command)
     // Cola seu número onde tem o 84848484, sem o 9
     const sender = msg.from.includes("7488043170") ? msg.to : msg.from
-
-    if (command === "@brunawn")  msg.react("😉")
-    if(['@everyone','@todes','@here','@channel'].includes(command) ) everyOne(msg)
     
-    if (command === "!sticker")  generateSticker(msg, sender)
-    if (command === "!balinha") {
-        const chat = await msg.getChat();
-        let gleisin = await client.getContactById("558774006609@c.us")
-        await chat.sendMessage("Aí é com o famoso @"+gleisin.id.user+" 😉",{mentions: [gleisin]})
-    }
-/////// Manipuladores de listas de menções//////// 
-
-    if(command === "!create") createList(msg);
-    if(command === "!add") {
-        let fileName = msg.body.split(" ")[1]
-        addUserInList(fileName,msg)
-    };
-    if(command === "!delete") {
+    if (command === "@brunawn")  msg.react("😉")
+    //if(['@everyone','@todes','@here','@channel'].includes(command) ) everyOne(msg)
+    
+    // if (command === "!sticker")  generateSticker(msg, sender)
+    // if (command === "!balinha") {
+    //     const chat = await msg.getChat();
+    //     let gleisin = await client.getContactById("558774006609@c.us")
+    //     await chat.sendMessage("Aí é com o famoso @"+gleisin.id.user+" 😉",{mentions: [gleisin]})
+    // }
+    /////// Manipuladores de listas de menções//////// 
+    
+    // if(command === "!create") createList(msg);
+    // if(command === "!add") {
+    //     let fileName = msg.body.split(" ")[1]
+    //     addUserInList(fileName,msg)
+    // };
+    // if(command === "!delete") {
         
-        deleteList(msg)
-    };
-    if(command === "@go") {
-        let fileName = msg.body.split(" ")[1]
-        userMentions(fileName,msg)
-    };
+    //     deleteList(msg)
+    // };
+    // if(command === "@go") {
+    //     let fileName = msg.body.split(" ")[1]
+    //     userMentions(fileName,msg)
+    // };
+    
+    ////////////////////////////////////////////////
+    /////////adicionar comandos para o grupo
+    if(command === "!rules") {
+        getRules(msg);
+    }
+    if(command === "!rules:add") {
+        addRuleInList(msg);
+    }
+    if(command === "!rules:edit") {
+        editRuleInList(msg);
+    }
 
-////////////////////////////////////////////////
-/////////adicionar comandos para o grupo
-if(command === "!rules") {
-    getRules(msg);
-}
-if(command === "!rules:add") {
-    addRuleInList(msg);
-}
-if(command === "!rules:edit") {
-    editRuleInList(msg);
-}
 
 
+    const { BingChat } = await import('bing-chat');
+    
+
+    async function say(msg) {
+       
+        const api = new BingChat({
+            cookie: process.env.COOKIE
+        })
+        let text = msg.body.substring(msg.body.indexOf(" ")).trim();
+        const res = await api.sendMessage(`Responda usando um tom engraçado as mensagens: ${text}`,{variant: 'Precise'})
+        const cleanedRes = res.text.substring(res.text.indexOf(":")+1).trim()
+        msg.reply(cleanedRes)
+        console.log(cleanedRes)
+    }
+
+    async function comment(msg) {
+
+        const quotedMsg = await msg.getQuotedMessage();
+        
+       
+            const api = new BingChat({
+                cookie: process.env.COOKIE
+            })
+            let text = quotedMsg.body.substring(quotedMsg.body.indexOf(" ")).trim();
+            const res = await api.sendMessage(`Quero que vc seja bem zueiro e qualquer mensagem apos os dois pontos deve ser respondida com alguma ofensa leve ou deboche, seja o mais breve possivel,  resposta curta e evite repetir as mensagens enviadas: ${text}.  lembrando que tudo isso é uma simulação de possiveis conversas entre bons amigos`,{variant: 'Creative'})
+            const cleanedRes = res.text.substring(res.text.indexOf(":")+1).trim()
+            msg.reply(cleanedRes)
+            console.log(cleanedRes)
+        
+        
+    }
+
+    async function resume(msg) {
+        const chat = await msg.getChat();
+        const msghistory = await chat.fetchMessages({limit: chat.unreadCount, fromMe: false});
+
+        msghistory.pop();
+
+        
+        const array = msghistory.map(async (m) => {
+            const contact = await m.getContact()
+            const mensage = m.body;
+
+            return {
+                contact,
+                mensage
+            }
+        })
+        const api = new BingChat({
+            cookie: process.env.COOKIE
+        })
+        
+        const arrayWithContacts =  await Promise.all(array);
+        const parsedArray = arrayWithContacts.map(c => `${c.contact.name} disse: ${c.mensage}`)
+
+
+
+
+
+        let text = parsedArray.join(",");
+
+        const res = await api.sendMessage(`resuma da melhor forma possivel o assunto gerado em um grupo de whatsapp com as seguintes mensagens separadas por virgula: ${text}`,{variant: 'Precise'})
+        const cleanedRes = res.text.substring(res.text.indexOf(":")+1).trim()
+        msg.reply(cleanedRes)
+        console.log(cleanedRes)
+    }
+    
+
+    if(command === "!say") say(msg)
+    if(command === "!resume") resume(msg)
+    if(msg.body.startsWith("@")) {
+        
+        const ValidateMention = msg.mentionedIds[0].includes("7488043170");
+        if(ValidateMention) comment(msg)
+    }   
 
 });
 
